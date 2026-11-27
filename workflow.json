@@ -1,0 +1,416 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "9a5e7947-1211-45f9-8890-bbdfd52be2e3",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26535e4a-9d9d-4e4d-9980-4ded088c3ab4",
+              "name": "LinkedIn Search Url",
+              "value": "=https://in.linkedin.com/jobs/data-scientist-jobs-noida?position=1&pageNum=0",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "23686a28-7a7f-476d-a37a-859827f3d162",
+      "name": "Job Search URL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -32,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorId": {
+          "__rl": true,
+          "value": "hKByXkMQaC5Qt9UMN",
+          "mode": "list",
+          "cachedResultName": "Linkedin Jobs Scraper (curious_coder/linkedin-jobs-scraper)",
+          "cachedResultUrl": "https://console.apify.com/actors/hKByXkMQaC5Qt9UMN/input"
+        },
+        "customBody": "{\n    \"autoConvertToAiSearch\": true,\n    \"limitPerSource\": 100,\n    \"scrapeCompany\": true,\n    \"splitByLocation\": false,\n    \"under10Applicants\": false,\n    \"urls\": [\n        \"https://in.linkedin.com/jobs/data-scientist-jobs-noida?position=1&pageNum=0\"\n    ]\n}",
+        "timeout": {},
+        "maxTotalChargeUsd": {},
+        "authentication": "apifyOAuth2Api"
+      },
+      "id": "6b4633f9-860d-4560-968f-9c788071862c",
+      "name": "Run an Actor and get dataset",
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -32
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "apifyOAuth2Api": {
+          "id": "1mLYUAeMP3PzBNgZ",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "5a11e4db-1aee-4844-959e-39ac176afeea",
+              "leftValue": "={{ $json.output[0].content[0].text.fit }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "88dd495e-2ae7-4aeb-984d-709cd877e45d",
+      "name": "Filter",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.4,
+      "position": [
+        1232,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.output[0].content[0].text }}",
+        "options": {}
+      },
+      "id": "eac8aa3b-268c-4e03-8a4c-1c88fa1c2106",
+      "name": "Markdown",
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "folderId": "1s_G4QT_pjKEi1u8GQuhclFceCeibA0Q7",
+        "title": "JOB postings "
+      },
+      "id": "1e51f9bf-7a89-477f-ad6e-7a645826ae9d",
+      "name": "Create a document",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        2048,
+        -16
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "edmUaRTL1AUPkdfS",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "=https://docs.google.com/document/d/1AIb0QLnQYBSl38UWPYsE1fu635RmfUE8fQ2Bc2dkOSM/edit?tab=t.0",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('Markdown').first().json.data }}"
+            }
+          ]
+        }
+      },
+      "id": "311eb895-7e7f-448e-a428-b830c2ba4bbc",
+      "name": "Add jobs to document",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        2288,
+        -16
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "edmUaRTL1AUPkdfS",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        416,
+        -48
+      ],
+      "id": "7bdb1321-cbbb-4130-910c-cfe565da65fc",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/1yK_VrDagw8s1CQnLsKc-FCUEV6cKQqv6UcvQKDoabG4/edit?tab=t.0"
+      },
+      "id": "a266d011-77a9-40f6-8536-14db8e5fb87e",
+      "name": "Get Resume",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        640,
+        -32
+      ],
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "edmUaRTL1AUPkdfS",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You are a helpful job filtering assistant.\n\n"
+            },
+            {
+              "content": "=You are a helpful job filtering assistant. You compare one job posting against a candidate resume and decide whether the candidate is a reasonable fit.\nbelow is my resume\n {{ $json.content }}\n\nbelow is the job description\n{{ $('Run an Actor and get dataset').item.json.descriptionText }}\nrespond in the following Json format\n{verdict: true or false}\n\nif i'm a fit output true\nelse false"
+            }
+          ]
+        },
+        "simplify": false,
+        "builtInTools": {},
+        "options": {
+          "textFormat": {
+            "textOptions": {
+              "type": "json_schema",
+              "name": "job_fit",
+              "schema": "{\"type\":\"object\",\"properties\":{\"fit\":{\"type\":\"boolean\"}},\"required\":[\"fit\"],\"additionalProperties\":false}",
+              "strict": true
+            }
+          }
+        }
+      },
+      "id": "70f55dad-4400-40d2-bfdc-40a8f8d2927b",
+      "name": "Check Resume Relevance",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        -32
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "you are a helpful resume writing assistant that converts high drafting resumes based on jobs.\n\n\nYou convert job posting data into clean, well-structured HTML. Return only the HTML fragment, with no code fences and no commentary."
+            },
+            {
+              "content": "=I'm looking for jobs, your role is to customize the provided resume using provided job description\nhere is the job desciption\n{{ $('Run an Actor and get dataset').item.json.descriptionHtml }}\nhere is my resume\n{{ $('Get Resume').item.json.content }}\nrespond with the customised resume, nothing else\n\nthis resume will be added to google docs so write it in HTML format that i can easily copy/paste\n\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "7569b424-23fd-4f6e-b1da-fbffa2375d01",
+      "name": "Customise Resume by JD",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1440,
+        -16
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Job Search URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Search URL": {
+      "main": [
+        [
+          {
+            "node": "Run an Actor and get dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor and get dataset": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Customise Resume by JD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Add jobs to document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Resume": {
+      "main": [
+        [
+          {
+            "node": "Check Resume Relevance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Resume Relevance": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customise Resume by JD": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9e5e0ac5-c6ab-4d9d-98cf-d09e1d77fd5a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "478c0ff6a035286de02ef4ad26a111cef8b8f87e9c3537d0b77abaf10a60d331"
+  },
+  "nodeGroups": [],
+  "id": "ajjiZlhCMV3LwEVH",
+  "tags": []
+}
